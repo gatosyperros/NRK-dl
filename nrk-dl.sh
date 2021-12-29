@@ -79,12 +79,12 @@ case $Choise in
                 wget $Sub -O $Name.vtt
                 sleep 0.5
                 echo "Video"
-                $FFP -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.66" -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
                 echo "Done"
                 ;;
         2)
                 echo "Video"
-                $FFP -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.66" -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
                 echo "Done"
                 ;;
         3)
