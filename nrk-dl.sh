@@ -1,4 +1,28 @@
 echo "This tool will attempt to extract a downloadable link from NRK"
+
+clean_exit (){
+#Clears variable
+unset Check_ffmpeg
+unset Check_Link
+unset Check_FFP
+unset LINK
+unset ID
+unset CMD
+unset curling
+unset Name
+unset Sub_c
+unset Video_c
+unset Sub
+unset Video
+unset Choise
+unset Check_txt
+unset FFP
+return
+exit
+}
+
+
+
 #check if ffmpeg is installed
 Check_ffmpeg=$(ffmpeg -version | grep -c Copyright)
 if [ $Check_ffmpeg == 0 ]; then
@@ -7,7 +31,7 @@ if [ $Check_ffmpeg == 0 ]; then
         Check_ffmpeg=$($FFP -version | grep -c Copyright)
         if [ $Check_ffmpeg == 0 ]; then
                 echo "couldn't find ffmpeg on the system... exiting"
-                return
+                clean_exit
         fi
 else
         FFP="ffmpeg"
@@ -20,11 +44,10 @@ if [ $Check_Link == 0 ]; then
 else
         LINK=$1
 fi
-
 Check_Link=$(echo "$LINK" | grep -c nrk.no)
 if [ $Check_Link == 0 ]; then
         echo "The script needs a link to function..."
-        return
+        clean_exit
 fi
 ID=$(echo "$LINK" | grep -o '............$')
 CMD=$(echo 'curl -m 10 -s https://psapi.nrk.no/playback/manifest/program')
@@ -32,7 +55,6 @@ echo "Fetching data please wait...."
 curling=$(echo "$CMD/$ID")
 $curling >nrk.info
 Name=$(cat nrk.info | python -m json.tool  |grep -o "title.*.[a-z]" | cut -c 10-)
-
 #Fetching Video Link
 Check_Link=$(cat nrk.info | python -m json.tool  |grep  -c playlist)
 if [ $Check_Link == 1 ]; then
@@ -40,7 +62,7 @@ if [ $Check_Link == 1 ]; then
         Video_C="Found"
 else
         Video_C=$(echo "Couldn't find video (probably time out) try again or contact the developer(s)")
-        return
+        clean_exit
 fi
 
 #Fetching Subtitle link Link"
@@ -64,31 +86,46 @@ echo "1: Download Video and Subtitles (default)"
 echo "2: Download Only Video"
 echo "3: Exit"
 
-#experimental
-#Video=$(echo $Video | sed 's/bw_low=10/bw_low=1000/g' | sed 's/bw_high=6000/bw_high=60000/g')
-
 if [[ $Sub_C == "Found" ]]; then
         read -rp "Please select the next action: " -e -i 1 Choise
 else
         read -rp "Please select the next action: " -e -i 2 Choise
 fi
-
 case $Choise in
         1)
                 echo "Subtitles"
                 wget $Sub -O $Name.vtt
-                sleep 0.5
+                sleep 2
                 echo "Video"
-                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.66" -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i "$Video" -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                Check_txt=$(cat $Name.vtt | grep -c -e [a-z] -e [A-Z])
+                echo "making sure subtext is not empty"
+                echo "$Check_txt"
+                if [[ $Check_txt == 0 ]]; then
+                        echo "error with subtext, trying again with curl"
+                        curl -m 10 -Js $Sub -o $Name.vtt
+                fi
+                Check_txt=$(cat $Name.vtt | grep -c -e [a-z] -e [A-Z])
+                if [ $Check_txt == 0 ]; then
+                        echo "############################################"
+                        echo "          failed to get subtext           "
+                        echo "       you can try again manually with:   "
+                        echo "wget $Sub -O $Name.vtt"
+                        echo "                or                        "
+                        echo "curl -m 10 -Js $Sub -o $Name.vtt"
+                        echo "############################################"
+                fi
                 echo "Done"
+                clean_exit
                 ;;
         2)
                 echo "Video"
-                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.66" -i "$Video" -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i "$Video" -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 "$Name.mp4"
                 echo "Done"
+                clean_exit
                 ;;
         3)
                 echo "Exiting"
-                return
+                clean_exit
                 ;;
 esac
