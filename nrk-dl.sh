@@ -18,12 +18,41 @@ unset Video
 unset Choise
 unset Check_txt
 unset FFP
-rm nkr.info
+unset Status
+unset Looping
 }
 
+Check_Status (){
+if [ $Looping == 2 ]; then
+        echo "###############################################"
+        echo "Failed to fetch data twice,Last Reason: $Status"
+        echo "###############################################"
+        return
+fi
 
+if [ $Status == "28" ]; then
+        echo "Operation timed out, trying again in 5 seconds..."
+        sleep 5
+        echo "Fetching data please wait...."
+        $curling >nrk.info
+        Status=$PIPESTATUS
+        Looping=$(($Looping+1))
+        Check_Status
+fi
+if [ $Status == "35" ]; then
+        echo "SSL ERROR, trying again in 5 seconds..."
+        sleep 5
+        echo "Fetching data please wait...."
+        $curling >nrk.info
+        Status=$PIPESTATUS
+        Looping=$(($Looping+1))
+        Check_Status
+fi
+return
+}
 
 #check if ffmpeg is installed
+Looping=0
 Check_ffmpeg=$(ffmpeg -version | grep -c Copyright)
 if [ $Check_ffmpeg == 0 ]; then
         echo "Please make sure ffmpeg is installed on the system"
@@ -31,9 +60,9 @@ if [ $Check_ffmpeg == 0 ]; then
         Check_ffmpeg=$($FFP -version | grep -c Copyright)
         if [ $Check_ffmpeg == 0 ]; then
                 echo "couldn't find ffmpeg on the system... exiting"
-        clean_exit
-        return
-        exit
+                clean_exit
+                return
+                exit
         fi
 else
         FFP="ffmpeg"
@@ -54,10 +83,12 @@ if [ $Check_Link == 0 ]; then
         exit
 fi
 ID=$(echo "$LINK" | grep -o '............$')
-CMD=$(echo 'curl -m 10 -s https://psapi.nrk.no/playback/manifest/program')
+CMD=$(echo 'curl -m 5 -s https://psapi.nrk.no/playback/manifest/program')
 echo "Fetching data please wait...."
 curling=$(echo "$CMD/$ID")
 $curling >nrk.info
+Status=$PIPESTATUS
+Check_Status
 Name=$(cat nrk.info | python -m json.tool  |grep -o "title.*.[a-z]" | cut -c 10-)
 #Fetching Video Link
 Check_Link=$(cat nrk.info | python -m json.tool  |grep  -c playlist)
@@ -65,7 +96,7 @@ if [ $Check_Link == 1 ]; then
         Video=$(cat nrk.info | python -m json.tool  |grep playlist | cut -c 25- | sed 's/..$//')
         Video_C="Found"
 else
-        echo "Couldn't find video (probably time out) try again or contact the developer(s)"
+        echo "Couldn't find video try again or contact the developer(s)"
         clean_exit
         return
         exit
@@ -129,6 +160,7 @@ case $Choise in
         2)
                 echo "Video"
                 $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i "$Video" -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 "$Name.mp4"
+                echo "Status= $?"
                 echo "Done"
                 clean_exit
                 return
