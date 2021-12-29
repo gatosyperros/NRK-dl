@@ -1,3 +1,4 @@
+#!/bin/bash
 echo "This tool will attempt to extract a downloadable link from NRK"
 
 clean_exit (){
@@ -17,8 +18,7 @@ unset Video
 unset Choise
 unset Check_txt
 unset FFP
-return
-exit
+rm nkr.info
 }
 
 
@@ -31,7 +31,9 @@ if [ $Check_ffmpeg == 0 ]; then
         Check_ffmpeg=$($FFP -version | grep -c Copyright)
         if [ $Check_ffmpeg == 0 ]; then
                 echo "couldn't find ffmpeg on the system... exiting"
-                clean_exit
+        clean_exit
+        return
+        exit
         fi
 else
         FFP="ffmpeg"
@@ -48,6 +50,8 @@ Check_Link=$(echo "$LINK" | grep -c nrk.no)
 if [ $Check_Link == 0 ]; then
         echo "The script needs a link to function..."
         clean_exit
+        return
+        exit
 fi
 ID=$(echo "$LINK" | grep -o '............$')
 CMD=$(echo 'curl -m 10 -s https://psapi.nrk.no/playback/manifest/program')
@@ -63,6 +67,8 @@ if [ $Check_Link == 1 ]; then
 else
         Video_C=$(echo "Couldn't find video (probably time out) try again or contact the developer(s)")
         clean_exit
+        return
+        exit
 fi
 
 #Fetching Subtitle link Link"
@@ -117,15 +123,21 @@ case $Choise in
                 fi
                 echo "Done"
                 clean_exit
+                return
+                exit
                 ;;
         2)
                 echo "Video"
                 $FFP -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i "$Video" -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 "$Name.mp4"
                 echo "Done"
                 clean_exit
+                return
+                exit
                 ;;
         3)
                 echo "Exiting"
                 clean_exit
+                return
+                exit
                 ;;
 esac
