@@ -65,7 +65,7 @@ if [ $Check_Link == 1 ]; then
         Video=$(cat nrk.info | python -m json.tool  |grep playlist | cut -c 25- | sed 's/..$//')
         Video_C="Found"
 else
-        Video_C=$(echo "Couldn't find video (probably time out) try again or contact the developer(s)")
+        echo "Couldn't find video (probably time out) try again or contact the developer(s)"
         clean_exit
         return
         exit
