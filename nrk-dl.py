@@ -47,8 +47,10 @@ Sub_c = Sub.find(NID[-8:])
 Check_Sub = Sub_c
 if (Check_Sub >= 0):
     Sub_c = "Found "
+    Choise = "1"
 else:
     Sub_c = "Couldn't find "
+    Choise = "2"
 
 print("")
 print("#########################")
@@ -58,12 +60,14 @@ print(Video_c+"Video!")
 print(Sub_c+"Sub")
 print("#########################")
 print("")
-print("1: Download Video and Subtitles (default)")
+print("1: Download Video and Subtitles")
 print("2: Download Only Video")
 print("3: Exit")
-
-Choise = input('Please select the next action:')
 print(type(Choise))
+print(Choise)
+
+Choise = input('Please select the next action (default '+Choise+'): ') or Choise
+print(Choise)
 if (Choise == "1"):
     print('1')
     Sub_CMD = 'curl -Js '+Sub+" -o "+Name+'.vtt'
@@ -71,7 +75,8 @@ if (Choise == "1"):
     Video_CMD = 'ffmpeg -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i '+Video+' -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 '+Name+'.mp4"'
     subprocess.Popen(Video_CMD)
 elif (Choise == "2"):
-    print('2')
+    Video_CMD = 'ffmpeg -headers "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.80 Safari/537.36" -headers "X-Forwarded-For: 13.14.15.16" -xerror -i '+Video+' -map 0:0 -map 0:1 -c:v libx264 -preset slow -crf 22 '+Name+'.mp4"'
+    subprocess.Popen(Video_CMD)
 elif (Choise == "3"):
     exit()
 else:
